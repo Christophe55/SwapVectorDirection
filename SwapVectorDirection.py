@@ -192,11 +192,22 @@ class SwapVectorDirection:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
         #    pass
-	# Inverse le sens de la géométrie des éléments sélectionnés
-	layer = qgis.utils.iface.mapCanvas().currentLayer()
-	for feature in layer.selectedFeatures():
-		geom = feature.geometry()
-		nodes = geom.asPolyline()
-		nodes.reverse() 
-		newgeom = QgsGeometry.fromPolyline(nodes)
-		layer.changeGeometry(feature.id(),newgeom)
+    # Inverse le sens de la géométrie des éléments sélectionnés
+        layer = qgis.utils.iface.mapCanvas().currentLayer()
+        if layer is None:
+            return
+        for feature in layer.selectedFeatures():
+            geom = feature.geometry()
+            if geom.wkbType() == QGis.WKBMultiLineString:
+                nodes = geom.asMultiPolyline()
+                for line in nodes:
+                    line.reverse()
+                newgeom = QgsGeometry.fromMultiPolyline(nodes)
+                layer.changeGeometry(feature.id(),newgeom)
+                
+            if geom.wkbType() == QGis.WKBLineString:
+                nodes = geom.asPolyline()
+                nodes.reverse()    
+                newgeom = QgsGeometry.fromPolyline(nodes)
+                layer.changeGeometry(feature.id(),newgeom)
+        qgis.utils.iface.mapCanvas().refresh()
