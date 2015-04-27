@@ -10,7 +10,7 @@
 name=Swap Vector Direction
 qgisMinimumVersion=2.0
 description=Swap Vector Direction permet d'inverser la direction d'un vecteur
-version=0.4
+version=0.5
 author=Christophe Maginot
 email=christophe.maginot@gmail.com
 
@@ -19,7 +19,7 @@ email=christophe.maginot@gmail.com
 # Optional items:
 
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=Prise en charge des géométries multilignes
 
 # Tags are comma separated with spaces allowed
 tags=VECTOR, DIRECTION, SWAP, GEOMETRY
