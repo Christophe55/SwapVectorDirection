@@ -34,3 +34,5 @@ experimental=False
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
 
+#category Vertor, Rester, database or internet
+category=Vector
