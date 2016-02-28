@@ -22,7 +22,7 @@ email=christophe.maginot@gmail.com
 changelog=Prise en charge des géométries multilignes
 
 # Tags are comma separated with spaces allowed
-tags=VECTOR, DIRECTION, SWAP, GEOMETRY
+tags=VECTOR, DIRECTION, SWAP, GEOMETRY, REVERSE
 
 homepage=https://hub.qgis.org/projects/swapvectordirection
 tracker=https://hub.qgis.org/projects/swapvectordirection/issues
