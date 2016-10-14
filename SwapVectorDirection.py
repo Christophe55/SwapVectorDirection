@@ -31,6 +31,8 @@ import resources_rc
 # Import the code for the dialog
 from SwapVectorDirection_dialog import SwapVectorDirectionDialog
 import os.path
+# Import des fonctions d'intreface de Qgis
+from qgis.gui import *
 
 
 class SwapVectorDirection:
@@ -211,3 +213,4 @@ class SwapVectorDirection:
                 newgeom = QgsGeometry.fromPolyline(nodes)
                 layer.changeGeometry(feature.id(),newgeom)
         qgis.utils.iface.mapCanvas().refresh()
+	qgis.utils.iface.messageBar().pushMessage("SwapVectorDirection ", u" Sens inversé avec succès", level=QgsMessageBar.INFO)
