@@ -3,12 +3,12 @@
 <context>
     <name>SwapVectorDirection</name>
     <message>
-        <location filename="../SwapVectorDirection.py" line="202"/>
+        <location filename="../SwapVectorDirection.py" line="181"/>
         <source>&amp;Swap Vector Direction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../SwapVectorDirection.py" line="192"/>
+        <location filename="../SwapVectorDirection.py" line="171"/>
         <source>Reverse direction of geometry</source>
         <translation type="unfinished"></translation>
     </message>

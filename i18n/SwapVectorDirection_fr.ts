@@ -4,14 +4,14 @@
 <context>
     <name>SwapVectorDirection</name>
     <message>
-        <location filename="../SwapVectorDirection.py" line="202"/>
+        <location filename="../SwapVectorDirection.py" line="181"/>
         <source>&amp;Swap Vector Direction</source>
         <translation>&amp;Swap Vector Direction</translation>
     </message>
     <message>
-        <location filename="../SwapVectorDirection.py" line="192"/>
+        <location filename="../SwapVectorDirection.py" line="171"/>
         <source>Reverse direction of geometry</source>
-        <translation>Inverser la direction du vecteur</translation>
+        <translation>Inverser la direction de la géométire</translation>
     </message>
 </context>
 <context>
@@ -19,7 +19,7 @@
     <message>
         <location filename="../SwapVectorDirection_dialog_base.ui" line="14"/>
         <source>Swap Vector Direction</source>
-        <translation>Swap Vector direction</translation>
+        <translation>Swap Vector Direction</translation>
     </message>
     <message utf8="true">
         <location filename="../SwapVectorDirection_dialog_base.ui" line="42"/>
