@@ -201,13 +201,13 @@ class SwapVectorDirection:
         
         # test si une couche est sélectionnée
         if layer is None:
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u" No selected Layer", level=QgsMessageBar.CRITICAL)
+            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected Layer", level=QgsMessageBar.CRITICAL)
             return
         
         #teste si au moins une entité est selectionnée, sinon il active 'loutil de selection
         if layer.selectedFeatures() == []:
             print u"no selected feature"
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u" No selected feature, please, select one and relaunch", level=QgsMessageBar.WARNING)
+            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected feature, please, select one and relaunch", level=QgsMessageBar.WARNING)
             self.iface.actionSelect().trigger()
             #layer.selectedFeatures = QgsMapToolIdentifyFeature(self.iface.mapCanvas(),layer)
             return
@@ -228,12 +228,27 @@ class SwapVectorDirection:
                 nodes.reverse()    
                 newgeom = QgsGeometry.fromPolyline(nodes)
                 layer.changeGeometry(feature.id(),newgeom)
+                
+            elif geom.wkbType() == QGis.WKBLineString25D:
+                nodes = geom.asPolyline()
+                nodes.reverse()    
+                newgeom = QgsGeometry.fromPolyline(nodes)
+                layer.changeGeometry(feature.id(),newgeom)
+                
+            elif geom.wkbType() == QGis.WKBMultiLineString25D:
+                nodes = geom.asMultiPolyline()
+                for line in nodes:
+                    line.reverse()
+                newgeom = QgsGeometry.fromMultiPolyline(nodes)
+                layer.changeGeometry(feature.id(),newgeom)
+                
+                
             else :
-                qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u" The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
+                qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
                 return
         
 	# on rafraichit le canvas
 	qgis.utils.iface.mapCanvas().refresh()
 	
 	#message d'info pour dire que tout s'est bien passé
-	qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u" It's done", level=QgsMessageBar.INFO)
+	qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=QgsMessageBar.INFO)
