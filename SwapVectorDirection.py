@@ -201,6 +201,9 @@ class SwapVectorDirection:
             #layer.selectedFeatures = QgsMapToolIdentifyFeature(self.iface.mapCanvas(),layer)
             return
             
+        layer.startEditing()
+        layer.beginEditCommand( "Swap vector direction" )
+        
         for feature in layer.selectedFeatures():
             geom = feature.geometry()
             if geom.wkbType() == QGis.WKBMultiLineString:
@@ -233,6 +236,8 @@ class SwapVectorDirection:
             else :
                 qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
                 return
+        
+        layer.endEditCommand()
         
         # on rafraichit le canvas
         qgis.utils.iface.mapCanvas().refresh()
