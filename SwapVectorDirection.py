@@ -233,8 +233,8 @@ class SwapVectorDirection:
                 qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
                 return
         
-	# on rafraichit le canvas
-	qgis.utils.iface.mapCanvas().refresh()
-	
-	#message d'info pour dire que tout s'est bien passé
-	qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=QgsMessageBar.INFO)
+        # on rafraichit le canvas
+        qgis.utils.iface.mapCanvas().refresh()
+        
+        #message d'info pour dire que tout s'est bien passé
+        qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=QgsMessageBar.INFO)
