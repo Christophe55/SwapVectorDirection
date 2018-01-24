@@ -70,9 +70,6 @@ class SwapVectorDirection:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Swap Vector Direction')
-        # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'SwapVectorDirection')
-        self.toolbar.setObjectName(u'SwapVectorDirection')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -152,7 +149,7 @@ class SwapVectorDirection:
             action.setWhatsThis(whats_this)
 
         if add_to_toolbar:
-            self.toolbar.addAction(action)
+            self.iface.addVectorToolBarIcon(action)
 
         if add_to_menu:
             self.iface.addPluginToVectorMenu(
@@ -180,7 +177,7 @@ class SwapVectorDirection:
             self.iface.removePluginMenu(
                 self.tr(u'&Swap Vector Direction'),
                 action)
-            self.iface.removeToolBarIcon(action)
+            self.iface.removeVectorToolBarIcon(action)
 
 
     def run(self):
