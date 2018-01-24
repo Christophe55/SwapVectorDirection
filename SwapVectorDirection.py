@@ -20,13 +20,17 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 # Import des fonctions QGIS
 from qgis.core import *
 import qgis.utils
 # Initialize Qt resources from file resources.py
+import sys
+import os.path
+sys.path.append(os.path.dirname(__file__))
 import resources_rc
 import os.path
 # Import des fonctions d'intreface de Qgis
