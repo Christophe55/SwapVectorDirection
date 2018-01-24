@@ -192,14 +192,11 @@ class SwapVectorDirection:
         
         #teste si au moins une entité est selectionnée, sinon il active 'loutil de selection
         if layer.selectedFeatures() == []:
-            print u"no selected feature"
             qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected feature, please, select one and relaunch", level=QgsMessageBar.WARNING)
             self.iface.actionSelect().trigger()
             #layer.selectedFeatures = QgsMapToolIdentifyFeature(self.iface.mapCanvas(),layer)
             return
             
-        print(layer.selectedFeatures())
-        
         for feature in layer.selectedFeatures():
             geom = feature.geometry()
             if geom.wkbType() == QGis.WKBMultiLineString:
