@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  SwapVectorDirection
@@ -32,7 +32,6 @@ import sys
 import os.path
 sys.path.append(os.path.dirname(__file__))
 import resources_rc
-import os.path
 # Import des fonctions d'intreface de Qgis
 from qgis.gui import *
 
@@ -197,42 +196,25 @@ class SwapVectorDirection:
             self.iface.actionSelect().trigger()
             #layer.selectedFeatures = QgsMapToolIdentifyFeature(self.iface.mapCanvas(),layer)
             return
-            
+
+        if layer.geometryType() != QgsWkbTypes.LineGeometry:
+            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
+            return
+
         layer.startEditing()
         layer.beginEditCommand( "Swap vector direction" )
         
         for feature in layer.selectedFeatures():
             geom = feature.geometry()
-            if geom.wkbType() == QGis.WKBMultiLineString:
-                nodes = geom.asMultiPolyline()
-                for line in nodes:
-                    line.reverse()
-                newgeom = QgsGeometry.fromMultiPolyline(nodes)
+            if geom.isMultipart():
+                mls = QgsMultiLineString()
+                for line in geom.asGeometryCollection():
+                    mls.addGeometry(line.constGet().reversed())
+                newgeom = QgsGeometry(mls)
                 layer.changeGeometry(feature.id(),newgeom)
-                
-            elif geom.wkbType() == QGis.WKBLineString:
-                nodes = geom.asPolyline()
-                nodes.reverse()    
-                newgeom = QgsGeometry.fromPolyline(nodes)
+            else:
+                newgeom = QgsGeometry(geom.constGet().reversed())
                 layer.changeGeometry(feature.id(),newgeom)
-                
-            elif geom.wkbType() == QGis.WKBLineString25D:
-                nodes = geom.asPolyline()
-                nodes.reverse()    
-                newgeom = QgsGeometry.fromPolyline(nodes)
-                layer.changeGeometry(feature.id(),newgeom)
-                
-            elif geom.wkbType() == QGis.WKBMultiLineString25D:
-                nodes = geom.asMultiPolyline()
-                for line in nodes:
-                    line.reverse()
-                newgeom = QgsGeometry.fromMultiPolyline(nodes)
-                layer.changeGeometry(feature.id(),newgeom)
-                
-                
-            else :
-                qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
-                return
         
         layer.endEditCommand()
         
