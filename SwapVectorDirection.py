@@ -20,17 +20,18 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 # Import des fonctions QGIS
 from qgis.core import *
 import qgis.utils
 # Initialize Qt resources from file resources.py
-import resources_rc
-# Import the code for the dialog
-from SwapVectorDirection_dialog import SwapVectorDirectionDialog
+import sys
 import os.path
+sys.path.append(os.path.dirname(__file__))
+import resources_rc
 # Import des fonctions d'intreface de Qgis
 from qgis.gui import *
 
@@ -65,15 +66,9 @@ class SwapVectorDirection:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # Create the dialog (after translation) and keep reference
-        self.dlg = SwapVectorDirectionDialog()
-
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Swap Vector Direction')
-        # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'SwapVectorDirection')
-        self.toolbar.setObjectName(u'SwapVectorDirection')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -153,7 +148,7 @@ class SwapVectorDirection:
             action.setWhatsThis(whats_this)
 
         if add_to_toolbar:
-            self.toolbar.addAction(action)
+            self.iface.addVectorToolBarIcon(action)
 
         if add_to_menu:
             self.iface.addPluginToVectorMenu(
@@ -181,20 +176,11 @@ class SwapVectorDirection:
             self.iface.removePluginMenu(
                 self.tr(u'&Swap Vector Direction'),
                 action)
-            self.iface.removeToolBarIcon(action)
+            self.iface.removeVectorToolBarIcon(action)
 
 
     def run(self):
         """Run method that performs all the real work"""
-        # show the dialog
-        #self.dlg.show()
-        # Run the dialog event loop
-        #result = self.dlg.exec_()
-        # See if OK was pressed
-        #if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-        #    pass
         
         # Inverse le sens de la géométrie des éléments sélectionnés 
         layer = qgis.utils.iface.mapCanvas().currentLayer()
@@ -206,49 +192,34 @@ class SwapVectorDirection:
         
         #teste si au moins une entité est selectionnée, sinon il active 'loutil de selection
         if layer.selectedFeatures() == []:
-            print u"no selected feature"
             qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected feature, please, select one and relaunch", level=QgsMessageBar.WARNING)
             self.iface.actionSelect().trigger()
             #layer.selectedFeatures = QgsMapToolIdentifyFeature(self.iface.mapCanvas(),layer)
             return
-            
-        print(layer.selectedFeatures())
+
+        if layer.geometryType() != QgsWkbTypes.LineGeometry:
+            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
+            return
+
+        layer.startEditing()
+        layer.beginEditCommand( "Swap vector direction" )
         
         for feature in layer.selectedFeatures():
             geom = feature.geometry()
-            if geom.wkbType() == QGis.WKBMultiLineString:
-                nodes = geom.asMultiPolyline()
-                for line in nodes:
-                    line.reverse()
-                newgeom = QgsGeometry.fromMultiPolyline(nodes)
+            if geom.isMultipart():
+                mls = QgsMultiLineString()
+                for line in geom.asGeometryCollection():
+                    mls.addGeometry(line.constGet().reversed())
+                newgeom = QgsGeometry(mls)
                 layer.changeGeometry(feature.id(),newgeom)
-                
-            elif geom.wkbType() == QGis.WKBLineString:
-                nodes = geom.asPolyline()
-                nodes.reverse()    
-                newgeom = QgsGeometry.fromPolyline(nodes)
+            else:
+                newgeom = QgsGeometry(geom.constGet().reversed())
                 layer.changeGeometry(feature.id(),newgeom)
-                
-            elif geom.wkbType() == QGis.WKBLineString25D:
-                nodes = geom.asPolyline()
-                nodes.reverse()    
-                newgeom = QgsGeometry.fromPolyline(nodes)
-                layer.changeGeometry(feature.id(),newgeom)
-                
-            elif geom.wkbType() == QGis.WKBMultiLineString25D:
-                nodes = geom.asMultiPolyline()
-                for line in nodes:
-                    line.reverse()
-                newgeom = QgsGeometry.fromMultiPolyline(nodes)
-                layer.changeGeometry(feature.id(),newgeom)
-                
-                
-            else :
-                qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
-                return
         
-	# on rafraichit le canvas
-	qgis.utils.iface.mapCanvas().refresh()
-	
-	#message d'info pour dire que tout s'est bien passé
-	qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=QgsMessageBar.INFO)
+        layer.endEditCommand()
+        
+        # on rafraichit le canvas
+        qgis.utils.iface.mapCanvas().refresh()
+        
+        #message d'info pour dire que tout s'est bien passé
+        qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=QgsMessageBar.INFO)
