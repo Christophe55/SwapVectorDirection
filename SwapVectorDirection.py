@@ -20,6 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+from builtins import object
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -36,7 +37,7 @@ import resources_rc
 from qgis.gui import *
 
 
-class SwapVectorDirection:
+class SwapVectorDirection(object):
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -187,18 +188,18 @@ class SwapVectorDirection:
         
         # test si une couche est sélectionnée
         if layer is None:
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected Layer", level=QgsMessageBar.CRITICAL)
+            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected Layer", level=Qgis.Critical)
             return
         
         #teste si au moins une entité est selectionnée, sinon il active 'loutil de selection
         if layer.selectedFeatures() == []:
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected feature, please, select one and relaunch", level=QgsMessageBar.WARNING)
+            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected feature, please, select one and relaunch", level=Qgis.Warning)
             self.iface.actionSelect().trigger()
             #layer.selectedFeatures = QgsMapToolIdentifyFeature(self.iface.mapCanvas(),layer)
             return
 
         if layer.geometryType() != QgsWkbTypes.LineGeometry:
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=QgsMessageBar.CRITICAL)
+            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=Qgis.Critical)
             return
 
         layer.startEditing()
@@ -222,4 +223,4 @@ class SwapVectorDirection:
         qgis.utils.iface.mapCanvas().refresh()
         
         #message d'info pour dire que tout s'est bien passé
-        qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=QgsMessageBar.INFO)
+        qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=Qgis.Info)
