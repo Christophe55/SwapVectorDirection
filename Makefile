@@ -52,14 +52,14 @@ HELP = help/build/html
 
 PLUGIN_UPLOAD = $(c)/plugin_upload.py
 
-QGISDIR=.qgis2
+QGISDIR=.qgis3
 
 default: compile
 
 compile: $(COMPILED_RESOURCE_FILES)
 
 %_rc.py : %.qrc
-	pyrcc4 -o $*_rc.py  $<
+	pyrcc5 -o $*_rc.py  $<
 
 %.qm : %.ts
 	lrelease $<
