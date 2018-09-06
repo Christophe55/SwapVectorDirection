@@ -28,11 +28,13 @@ from PyQt5.QtGui import *
 # Import des fonctions QGIS
 from qgis.core import *
 import qgis.utils
-# Initialize Qt resources from file resources.py
 import sys
 import os.path
 sys.path.append(os.path.dirname(__file__))
+
+# Initialize Qt resources from file resources.py
 import resources_rc
+
 # Import des fonctions d'intreface de Qgis
 from qgis.gui import *
 
@@ -70,6 +72,9 @@ class SwapVectorDirection(object):
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Swap Vector Direction')
+	# TODO: We are going to let the user set this up in a future iteration ##
+        self.toolbar = self.iface.addToolBar(u'SwapVectorDirection')
+        self.toolbar.setObjectName(u'SwapVectorDirection')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
