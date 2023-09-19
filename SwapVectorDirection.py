@@ -225,7 +225,7 @@ class SwapVectorDirection(object):
         layer.endEditCommand()
         
         # on rafraichit le canvas
-        qgis.utils.iface.mapCanvas().refresh()
+        qgis.utils.iface.mapCanvas().refreshAllLayers()
         
         #message d'info pour dire que tout s'est bien passé
         qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=Qgis.Info)
