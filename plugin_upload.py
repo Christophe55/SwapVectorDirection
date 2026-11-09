@@ -1,107 +1,162 @@
-#!/usr/bin/env python
+
+#!/usr/bin/env python3
 # coding=utf-8
-"""This script uploads a plugin package on the server.
-        Authors: A. Pasotti, V. Picavet
-        git sha              : $TemplateVCSFormat
+"""
+Upload a QGIS plugin package to the official QGIS plugin repository.
 """
 
 import sys
 import getpass
-import xmlrpclib
+import base64
+import xmlrpc.client
 from optparse import OptionParser
 
 # Configuration
-PROTOCOL = 'http'
-SERVER = 'plugins.qgis.org'
-PORT = '80'
-ENDPOINT = '/plugins/RPC2/'
+PROTOCOL = "https"
+SERVER = "plugins.qgis.org"
+PORT = "443"
+ENDPOINT = "/plugins/RPC2/"
 VERBOSE = False
 
 
-def main(parameters, arguments):
-    """Main entry point.
+class BasicAuthTransport(xmlrpc.client.Transport):
+    """XML-RPC transport with HTTP Basic authentication."""
 
-    :param parameters: Command line parameters.
-    :param arguments: Command line arguments.
-    """
-    address = "%s://%s:%s@%s:%s%s" % (
+    def __init__(self, username, password):
+        super().__init__()
+        credentials = f"{username}:{password}".encode("utf-8")
+        token = base64.b64encode(credentials).decode("ascii")
+        self.authorization = f"Basic {token}"
+
+    def send_headers(self, connection, headers):
+        headers.append(("Authorization", self.authorization))
+        super().send_headers(connection, headers)
+
+
+class BasicAuthSafeTransport(xmlrpc.client.SafeTransport):
+    """HTTPS XML-RPC transport with HTTP Basic authentication."""
+
+    def __init__(self, username, password):
+        super().__init__()
+        credentials = f"{username}:{password}".encode("utf-8")
+        token = base64.b64encode(credentials).decode("ascii")
+        self.authorization = f"Basic {token}"
+
+    def send_headers(self, connection, headers):
+        headers.append(("Authorization", self.authorization))
+        super().send_headers(connection, headers)
+
+
+def main(parameters, arguments):
+    """Upload the plugin package."""
+
+    address = "{}://{}:{}{}".format(
         PROTOCOL,
-        parameters.username,
-        parameters.password,
         parameters.server,
         parameters.port,
-        ENDPOINT)
-    print "Connecting to: %s" % hide_password(address)
+        ENDPOINT
+    )
 
-    server = xmlrpclib.ServerProxy(address, verbose=VERBOSE)
+    print("Connecting to: {}".format(address))
+
+    if PROTOCOL == "https":
+        transport = BasicAuthSafeTransport(
+            parameters.username,
+            parameters.password
+        )
+    else:
+        transport = BasicAuthTransport(
+            parameters.username,
+            parameters.password
+        )
+
+    server = xmlrpc.client.ServerProxy(
+        address,
+        transport=transport,
+        verbose=VERBOSE
+    )
 
     try:
-        plugin_id, version_id = server.plugin.upload(
-            xmlrpclib.Binary(open(arguments[0]).read()))
-        print "Plugin ID: %s" % plugin_id
-        print "Version ID: %s" % version_id
-    except xmlrpclib.ProtocolError, err:
-        print "A protocol error occurred"
-        print "URL: %s" % hide_password(err.url, 0)
-        print "HTTP/HTTPS headers: %s" % err.headers
-        print "Error code: %d" % err.errcode
-        print "Error message: %s" % err.errmsg
-    except xmlrpclib.Fault, err:
-        print "A fault occurred"
-        print "Fault code: %d" % err.faultCode
-        print "Fault string: %s" % err.faultString
+        with open(arguments[0], "rb") as plugin_file:
+            plugin_data = xmlrpc.client.Binary(plugin_file.read())
 
+        plugin_id, version_id = server.plugin.upload(plugin_data)
 
-def hide_password(url, start=6):
-    """Returns the http url with password part replaced with '*'.
+        print("Plugin ID: {}".format(plugin_id))
+        print("Version ID: {}".format(version_id))
 
-    :param url: URL to upload the plugin to.
-    :type url: str
+    except xmlrpc.client.ProtocolError as err:
+        print("A protocol error occurred")
+        print("URL: {}".format(err.url))
+        print("HTTP/HTTPS headers: {}".format(err.headers))
+        print("Error code: {}".format(err.errcode))
+        print("Error message: {}".format(err.errmsg))
 
-    :param start: Position of start of password.
-    :type start: int
-    """
-    start_position = url.find(':', start) + 1
-    end_position = url.find('@')
-    return "%s%s%s" % (
-        url[:start_position],
-        '*' * (end_position - start_position),
-        url[end_position:])
+    except xmlrpc.client.Fault as err:
+        print("A fault occurred")
+        print("Fault code: {}".format(err.faultCode))
+        print("Fault string: {}".format(err.faultString))
+
+    except OSError as err:
+        print("File error: {}".format(err))
+
+    except xmlrpc.client.Error as err:
+        print("XML-RPC error: {}".format(err))
 
 
 if __name__ == "__main__":
-    parser = OptionParser(usage="%prog [options] plugin.zip")
+
+    parser = OptionParser(
+        usage="%prog [options] plugin.zip"
+    )
+
     parser.add_option(
-        "-w", "--password", dest="password",
-        help="Password for plugin site", metavar="******")
+        "-w", "--password",
+        dest="password",
+        help="Password for plugin site",
+        metavar="******"
+    )
+
     parser.add_option(
-        "-u", "--username", dest="username",
-        help="Username of plugin site", metavar="user")
+        "-u", "--username",
+        dest="username",
+        help="Username of plugin site",
+        metavar="user"
+    )
+
     parser.add_option(
-        "-p", "--port", dest="port",
-        help="Server port to connect to", metavar="80")
+        "-p", "--port",
+        dest="port",
+        help="Server port to connect to",
+        metavar="443"
+    )
+
     parser.add_option(
-        "-s", "--server", dest="server",
-        help="Specify server name", metavar="plugins.qgis.org")
+        "-s", "--server",
+        dest="server",
+        help="Specify server name",
+        metavar="plugins.qgis.org"
+    )
+
     options, args = parser.parse_args()
+
     if len(args) != 1:
-        print "Please specify zip file.\n"
+        print("Please specify zip file.\n")
         parser.print_help()
         sys.exit(1)
+
     if not options.server:
         options.server = SERVER
+
     if not options.port:
         options.port = PORT
+
     if not options.username:
-        # interactive mode
         username = getpass.getuser()
-        print "Please enter user name [%s] :" % username,
-        res = raw_input()
-        if res != "":
-            options.username = res
-        else:
-            options.username = username
+        res = input("Please enter user name [{}] : ".format(username))
+        options.username = res if res else username
+
     if not options.password:
-        # interactive mode
-        options.password = getpass.getpass()
+        options.password = getpass.getpass("Password: ")
+
     main(options, args)
