@@ -15,7 +15,7 @@ description=Swap Vector Direction reverse the direction of a vector
 	Fr : SwapVectorDirection permet d'inverser la direction d'un vecteur
 about=This plugin allows to reverse the direction of a vector in a row or multi-row.
 	Fr : Ce plugin permet d'inverser la direction d'un vecteur dans une couche ligne ou multiligne.
-version=0.9.1
+version=0.9.2
 author=Christophe Maginot
 email=christophe.maginot@gmail.com
 
@@ -25,8 +25,8 @@ email=christophe.maginot@gmail.com
 
 # Uncomment the following line and add your changelog:
 changelog=
-        2026/11/09 0.9.1 Correction de l'affichage de l'icône dans la barre d'outils QGIS
-    	2018/09/06 0.9.1 Restauration de la barre d'outils pour QGIS 3.0
+    2026/11/09 0.9.2 Correction de l'affichage de l'icône dans la barre d'outils QGIS
+   	2018/09/06 0.9.1 Restauration de la barre d'outils pour QGIS 3.0
 	2018/01/24 0.9 Ajout du support pour QGIS 3.0
 	2017/03/27 0.8 Ajout du support pour les lignes et multilignes 2.5D
 	2016/10/22 0.7 Localisation en anglais etmessages d'erreurs
