@@ -37,8 +37,8 @@ changelog=
 # Tags are comma separated with spaces allowed
 tags=VECTOR, DIRECTION, SWAP, GEOMETRY, REVERSE
 
-homepage=https://hub.qgis.org/projects/swapvectordirection
-tracker=https://github.com/Christophe55/SwapVectorDirection/issues
+homepage=https://plugins.qgis.org/plugins/SwapVectorDirection/
+tracker=https://github.com/Christophe55/SwapVectorDirection/issues/
 repository=https://github.com/Christophe55/SwapVectorDirection
 icon=icon.png
 # experimental flag
