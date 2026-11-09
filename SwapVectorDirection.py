@@ -73,8 +73,8 @@ class SwapVectorDirection(object):
         self.actions = []
         self.menu = self.tr(u'&Swap Vector Direction')
 	# TODO: We are going to let the user set this up in a future iteration ##
-        self.toolbar = self.iface.addToolBar(u'SwapVectorDirection')
-        self.toolbar.setObjectName(u'SwapVectorDirection')
+        # Les actions du plugin sont ajoutées à la barre d'outils des extensions
+        # via iface.addToolBarIcon() (API standard de QGIS).
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -154,7 +154,7 @@ class SwapVectorDirection(object):
             action.setWhatsThis(whats_this)
 
         if add_to_toolbar:
-            self.iface.addVectorToolBarIcon(action)
+            self.iface.addToolBarIcon(action)
 
         if add_to_menu:
             self.iface.addPluginToVectorMenu(
@@ -168,7 +168,7 @@ class SwapVectorDirection(object):
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/SwapVectorDirection/icon.png'
+        icon_path = os.path.join(self.plugin_dir, 'icon.png')
         self.add_action(
             icon_path,
             text=self.tr(u'Reverse direction of geometry'),
@@ -182,7 +182,7 @@ class SwapVectorDirection(object):
             self.iface.removePluginMenu(
                 self.tr(u'&Swap Vector Direction'),
                 action)
-            self.iface.removeVectorToolBarIcon(action)
+            self.iface.removeToolBarIcon(action)
 
 
     def run(self):
@@ -225,7 +225,7 @@ class SwapVectorDirection(object):
         layer.endEditCommand()
         
         # on rafraichit le canvas
-        qgis.utils.iface.mapCanvas().refreshAllLayers()
+        qgis.utils.iface.mapCanvas().refresh()
         
         #message d'info pour dire que tout s'est bien passé
         qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=Qgis.Info)
