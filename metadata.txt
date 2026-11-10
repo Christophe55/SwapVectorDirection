@@ -15,7 +15,7 @@ description=Swap Vector Direction reverse the direction of a vector
 	Fr : SwapVectorDirection permet d'inverser la direction d'un vecteur
 about=This plugin allows to reverse the direction of a vector in a row or multi-row.
 	Fr : Ce plugin permet d'inverser la direction d'un vecteur dans une couche ligne ou multiligne.
-version=0.9.2
+version=0.9.4
 author=Christophe Maginot
 email=christophe.maginot@gmail.com
 
