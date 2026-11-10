@@ -20,26 +20,23 @@
  *                                                                         *
  ***************************************************************************/
 """
-from builtins import object
-from PyQt5.QtWidgets import QAction
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-
-# Import des fonctions QGIS
-from qgis.core import *
-import qgis.utils
-import sys
 import os.path
-sys.path.append(os.path.dirname(__file__))
 
-# Initialize Qt resources from file resources.py
-import resources_rc
+from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction
+from qgis.core import (
+    Qgis,
+    QgsGeometry,
+    QgsMultiLineString,
+    QgsVectorLayer,
+    QgsWkbTypes,
+)
 
-# Import des fonctions d'intreface de Qgis
-from qgis.gui import *
+MESSAGE_TITLE = 'SwapVectorDirection'
 
 
-class SwapVectorDirection(object):
+class SwapVectorDirection:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -54,27 +51,23 @@ class SwapVectorDirection(object):
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        
-	## initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
+
+        # initialize locale
+        locale = str(QSettings().value('locale/userLocale') or 'en')[0:2]
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
             'SwapVectorDirection_{}.qm'.format(locale))
-	
+
+        self.translator = None
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
-	
-            if qVersion() > '4.3.3':
-                QCoreApplication.installTranslator(self.translator)
+            QCoreApplication.installTranslator(self.translator)
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Swap Vector Direction')
-	# TODO: We are going to let the user set this up in a future iteration ##
-        # Les actions du plugin sont ajoutées à la barre d'outils des extensions
-        # via iface.addToolBarIcon() (API standard de QGIS).
+        self.menu = self.tr('&Swap Vector Direction')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -91,19 +84,18 @@ class SwapVectorDirection(object):
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('SwapVectorDirection', message)
 
-
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
-        """Add a toolbar icon to the InaSAFE toolbar.
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
+        """Add an action to the QGIS toolbar and/or the Vector menu.
 
         :param icon_path: Path to the icon for this action. Can be a resource
             path (e.g. ':/plugins/foo/bar.png') or a normal file system path.
@@ -141,7 +133,6 @@ class SwapVectorDirection(object):
             added to self.actions list.
         :rtype: QAction
         """
-
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -157,9 +148,7 @@ class SwapVectorDirection(object):
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToVectorMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToVectorMenu(self.menu, action)
 
         self.actions.append(action)
 
@@ -167,65 +156,98 @@ class SwapVectorDirection(object):
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
-
         icon_path = os.path.join(self.plugin_dir, 'icon.png')
         self.add_action(
             icon_path,
-            text=self.tr(u'Reverse direction of geometry'),
+            text=self.tr('Reverse direction of geometry'),
             callback=self.run,
             parent=self.iface.mainWindow())
-
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Swap Vector Direction'),
-                action)
+            # The action was added with addPluginToVectorMenu(), so it must
+            # be removed with removePluginVectorMenu().
+            self.iface.removePluginVectorMenu(self.menu, action)
             self.iface.removeToolBarIcon(action)
+        self.actions = []
 
+        if self.translator is not None:
+            QCoreApplication.removeTranslator(self.translator)
+            self.translator = None
+
+    def _push_message(self, text, level):
+        """Display a message in the QGIS message bar."""
+        self.iface.messageBar().pushMessage(
+            MESSAGE_TITLE, self.tr(text), level=level)
+
+    @staticmethod
+    def _reversed_geometry(geom):
+        """Return a new QgsGeometry with the direction of the lines reversed.
+
+        :param geom: A line or multiline geometry (2D or 2.5D).
+        :type geom: QgsGeometry
+
+        :rtype: QgsGeometry
+        """
+        if geom.isMultipart():
+            multi_line = QgsMultiLineString()
+            for part in geom.asGeometryCollection():
+                multi_line.addGeometry(part.constGet().reversed())
+            return QgsGeometry(multi_line)
+        return QgsGeometry(geom.constGet().reversed())
 
     def run(self):
-        """Run method that performs all the real work"""
-        
-        # Inverse le sens de la géométrie des éléments sélectionnés 
-        layer = qgis.utils.iface.mapCanvas().currentLayer()
-        
-        # test si une couche est sélectionnée
+        """Reverse the direction of the selected features of the layer."""
+        layer = self.iface.mapCanvas().currentLayer()
+
+        # Is a layer selected?
         if layer is None:
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected Layer", level=Qgis.Critical)
+            self._push_message('No selected Layer', Qgis.Critical)
             return
-        
-        #teste si au moins une entité est selectionnée, sinon il active 'loutil de selection
-        if layer.selectedFeatures() == []:
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"No selected feature, please, select one and relaunch", level=Qgis.Warning)
+
+        # Is it a line or multiline vector layer?
+        if (not isinstance(layer, QgsVectorLayer) or
+                layer.geometryType() != QgsWkbTypes.LineGeometry):
+            self._push_message(
+                'The selected layer is not a line or multiline',
+                Qgis.Critical)
+            return
+
+        # Is at least one feature selected? Otherwise activate select tool.
+        if layer.selectedFeatureCount() == 0:
+            self._push_message(
+                'No selected feature, please, select one and relaunch',
+                Qgis.Warning)
             self.iface.actionSelect().trigger()
-            #layer.selectedFeatures = QgsMapToolIdentifyFeature(self.iface.mapCanvas(),layer)
             return
 
-        if layer.geometryType() != QgsWkbTypes.LineGeometry:
-            qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"The selected layer is not a line or multiline", level=Qgis.Critical)
+        # Switch the layer to edit mode. startEditing() returns False when
+        # the layer is already being edited, so check isEditable() first.
+        if not layer.isEditable() and not layer.startEditing():
+            self._push_message(
+                'The layer cannot be edited', Qgis.Critical)
             return
 
-        layer.startEditing()
-        layer.beginEditCommand( "Swap vector direction" )
-        
-        for feature in layer.selectedFeatures():
-            geom = feature.geometry()
-            if geom.isMultipart():
-                mls = QgsMultiLineString()
-                for line in geom.asGeometryCollection():
-                    mls.addGeometry(line.constGet().reversed())
-                newgeom = QgsGeometry(mls)
-                layer.changeGeometry(feature.id(),newgeom)
-            else:
-                newgeom = QgsGeometry(geom.constGet().reversed())
-                layer.changeGeometry(feature.id(),newgeom)
-        
+        count = 0
+        layer.beginEditCommand(self.tr('Swap vector direction'))
+        try:
+            for feature in layer.selectedFeatures():
+                geom = feature.geometry()
+                if geom.isNull():
+                    continue
+                if layer.changeGeometry(
+                        feature.id(), self._reversed_geometry(geom)):
+                    count += 1
+        except Exception:
+            layer.destroyEditCommand()
+            raise
         layer.endEditCommand()
-        
-        # on rafraichit le canvas
-        qgis.utils.iface.mapCanvas().refresh()
-        
-        #message d'info pour dire que tout s'est bien passé
-        qgis.utils.iface.messageBar().pushMessage(u"SwapVectorDirection ", u"It's done", level=Qgis.Info)
+
+        # Refresh the map canvas
+        self.iface.mapCanvas().refresh()
+
+        self.iface.messageBar().pushMessage(
+            MESSAGE_TITLE,
+            self.tr("It's done") + ' ({})'.format(count),
+            level=Qgis.Info)
